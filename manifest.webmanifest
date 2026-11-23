@@ -1,0 +1,25 @@
+{
+  "name": "Roleta Premiada — Espaço do Celular",
+  "short_name": "Roleta EDC",
+  "description": "Gire a roleta e ganhe prêmios na Espaço do Celular.",
+  "id": "/",
+  "start_url": "/?app=1",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "orientation": "any",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "logo-edc.jpg",
+      "sizes": "200x200",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}

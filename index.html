@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Roleta Premiada — Espaço do Celular</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#080808">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Roleta EDC">
+<link rel="apple-touch-icon" href="logo-edc.jpg">
+<link rel="icon" type="image/jpeg" href="logo-edc.jpg">
+<style>
+.mascot{position:absolute;left:50%;top:calc(var(--S) * -0.62);width:calc(var(--S) * .9);aspect-ratio:540/508;transform:translateX(-42%);pointer-events:none;opacity:0;transition:opacity .6s}
+.stage.has-mascot{margin-top:calc(34px + var(--S) * .59)}
+.stage.has-mascot .mascot{opacity:1}
+.mascot-src{position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
+.mascot-st{font-size:12.5px;font-weight:700;color:var(--muted)}
+.overlay{overflow-y:auto}
+.win-wrap{position:relative;width:min(560px,100%);margin:auto}
+.win-wrap .win{width:100%}
+.win-mascot{position:absolute;left:50%;bottom:calc(100% - 44px);width:min(350px,84vw);aspect-ratio:540/508;transform:translateX(-42%);pointer-events:none;display:none}
+.win-wrap.has-m{margin-top:calc(min(350px,84vw) * .78)}
+.win-wrap.has-m .win-mascot{display:block}
+.win-wrap.has-m .trophy{display:none}
+.win-wrap.has-m .win{padding-top:40px}
+.pz{display:inline-block;background:var(--y);color:var(--k);font-weight:900;font-size:13px;line-height:1.25;padding:6px 10px;border-radius:8px}
+.nm-empty{color:var(--faint);font-style:italic}
+.pin{letter-spacing:.25em;padding-left:.25em;font-size:24px}
+.app-bar{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:40;display:flex;gap:8px}
+.app-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,212,0,.45);background:rgba(8,8,8,.82);color:#FFD400;font:800 12px Montserrat,sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .15s,background .2s}
+.app-btn:hover{background:#151515}.app-btn:active{transform:scale(.95)}
+.app-btn svg{width:16px;height:16px}
+.app-btn.y{background:#FFD400;color:#080808;border-color:#FFD400}
+.app-btn[hidden]{display:none}
+.is-app body{padding-top:env(safe-area-inset-top)}
+.is-app,.is-app body{overscroll-behavior:none;-webkit-user-select:none;user-select:none}
+.is-app input{-webkit-user-select:text;user-select:text}
+.logo-img{width:88px;height:88px;border-radius:50%;display:block;box-shadow:0 0 0 2px rgba(255,212,0,.25),0 0 26px rgba(255,212,0,.28)}
+.logo-img.sm{width:52px;height:52px}
+@media (max-width:700px){.logo-img{width:66px;height:66px}}
+@media (max-width:700px){
+  #tab-people thead{display:none}
+  #tab-people table,#tab-people tbody,#tab-people tr,#tab-people td{display:block;width:100%}
+  #tab-people tr{background:var(--k);border:1px solid var(--line2);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+  #tab-people td{border:0;padding:4px 0}
+  #tab-people td[data-l]::before{content:attr(data-l);display:block;font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
+}
+
+/* ---------- layout sem cabeçalho e sem formulário na página ---------- */
+main{grid-template-areas:"copy wheel";padding-top:48px}
+.copy{align-self:center}
+.tag{font-size:clamp(18px,2.1vw,28px);padding:12px 22px;border-radius:8px;letter-spacing:.16em}
+h1{font-size:clamp(86px,min(10vw,29vw - 192px),168px);line-height:.86;margin:26px 0 22px}
+h1 .outline{-webkit-text-stroke:3px var(--y)}
+.perks{margin-top:26px}
+
+/* ---------- centro da roleta: botão GIRAR A ROLETA ---------- */
+.rim{cursor:pointer}
+.hub{border:0;padding:0;cursor:pointer;font:inherit;z-index:3;
+  background:radial-gradient(circle at 50% 30%,#FFEA00,#FFD400 55%,#E9C200 100%);
+  box-shadow:0 0 0 4px var(--k),0 0 0 8px var(--y),0 0 0 10px rgba(8,8,8,.9),0 10px 30px rgba(0,0,0,.8),0 0 40px rgba(255,212,0,.5);
+  animation:hubPulse 1.8s ease-in-out infinite;transition:transform .15s}
+.hub:hover{transform:translate(-50%,-50%) scale(1.05)}
+.hub:active{transform:translate(-50%,-50%) scale(.96)}
+.hub:focus-visible{outline:3px solid #fff;outline-offset:6px}
+.hub-txt{display:block;color:var(--k);font-family:Anton,sans-serif;font-weight:400;text-transform:uppercase;line-height:.95;letter-spacing:.02em}
+.hub-txt small{display:block;font-size:calc(var(--S) * .066)}
+.hub-txt b{display:block;font-weight:400;font-size:calc(var(--S) * .044)}
+.stage.spinning .hub{animation:none;pointer-events:none;filter:brightness(.85)}
+.stage.spinning .rim{cursor:default}
+@keyframes hubPulse{0%,100%{box-shadow:0 0 0 4px var(--k),0 0 0 8px var(--y),0 0 0 10px rgba(8,8,8,.9),0 10px 30px rgba(0,0,0,.8),0 0 30px rgba(255,212,0,.45)}
+  50%{box-shadow:0 0 0 4px var(--k),0 0 0 8px var(--y2),0 0 0 22px rgba(255,234,0,0),0 10px 30px rgba(0,0,0,.8),0 0 70px rgba(255,234,0,.85)}}
+
+/* ---------- pop-up do cadastro ---------- */
+.form-wrap{position:relative;width:min(480px,100%);margin:auto;animation:pop .45s cubic-bezier(.2,1.3,.4,1)}
+.form-wrap .card{margin:0;max-width:none;width:100%;padding:30px 24px 24px;text-align:left}
+.form-wrap .close{top:12px;right:12px}
+.form-wrap .card-title{padding-right:44px}
+
+@media (max-width:980px){
+  main{grid-template-areas:"copy" "wheel";padding-top:34px}
+  h1{font-size:clamp(100px,16vw,150px)}
+  .tag{font-size:clamp(17px,2.8vw,24px)}
+  .form-wrap .card{margin:0}
+}
+@media (max-width:560px){
+  main{padding-top:28px}
+  h1{font-size:clamp(78px,23vw,120px)}
+  .tag{font-size:17px;padding:10px 18px}
+}
+/* ---------- tablet: sem os selos e com a roleta mais para cima ---------- */
+@media (pointer:coarse) and (min-width:600px){
+  .perks{display:none}
+  main{padding-top:16px}
+  h1{margin-bottom:0}
+  .wheel-col{align-self:start}
+  .stage{margin-top:26px}
+}
+@media (pointer:coarse) and (min-width:600px) and (max-width:980px){
+  main{row-gap:0}
+}
+@media (prefers-reduced-motion:reduce){.hub{animation:none}}
+</style>
+</head>
+<body>
+<div class="bg"><div class="slash s1"></div><div class="slash s2"></div><div class="dots"></div><div class="dots d2"></div></div>
+<div class="hazard"></div>
+
+<main>
+  <section class="copy">
+    <div class="tag"><span>★ Roleta premiada</span></div>
+    <h1><span class="glow">Girou,</span><span class="outline">ganhou!</span></h1>
+    <div class="perks">
+      <div class="perk"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></i>Todo giro é premiado</div>
+      <div class="perk"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5M4 9v11h16V9M3 9h18M9 20v-6h6v6"/></svg></i>Retire na loja</div>
+      <div class="perk"><i><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="M9 12l2 2 4-4"/></svg></i>Sorteio seguro</div>
+    </div>
+  </section>
+
+  <section class="wheel-col">
+    <div class="stage" id="stage">
+      <div class="halo"></div>
+      <div class="rays"></div>
+      <canvas class="mascot" id="mascot" aria-hidden="true"></canvas>
+      <video class="mascot-src" id="mascotVid" muted playsinline loop preload="auto" aria-hidden="true"></video>
+      <div class="rim" id="rim">
+        <div class="wheel-wrap"><canvas id="wheel"></canvas></div>
+        <div class="shine"></div>
+        <button class="hub" id="hubBtn" type="button" aria-label="Girar a roleta"><span class="hub-txt"><small>Girar</small><b>a roleta</b></span></button>
+      </div>
+      <div class="pointer" id="pointer"><svg viewBox="0 0 60 82">
+        <defs><linearGradient id="pg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#FFEA00"/><stop offset=".55" stop-color="#FFD400"/><stop offset="1" stop-color="#E9C200"/></linearGradient></defs>
+        <path d="M30 79 L7 34 A24 24 0 1 1 53 34 Z" fill="url(#pg)" stroke="#080808" stroke-width="3.5" stroke-linejoin="round"/>
+        <path d="M14 20 A18 18 0 0 1 30 9" stroke="rgba(255,255,255,.7)" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <circle cx="30" cy="28" r="9.5" fill="#080808"/><circle cx="30" cy="28" r="4.5" fill="#FFEA00"/>
+      </svg></div>
+    </div>
+    <div class="base"></div>
+    <div class="wheel-note" id="wheelNote"><b>7</b> prêmios esperando por você</div>
+  </section>
+</main>
+
+<div class="strip"><div class="strip-track" id="strip"></div></div>
+
+<footer>
+  <div>© Espaço do Celular — Promoção válida enquanto durarem os estoques. Prêmios não cumulativos e não convertíveis em dinheiro.<br>Apresente o código do prêmio em uma de nossas lojas dentro do prazo de validade.</div>
+  <div><a id="openAdmin">Área do lojista</a></div>
+</footer>
+
+<!-- Cadastro (pop-up) -->
+<div class="overlay" id="formModal" role="dialog" aria-modal="true" aria-label="Seus dados para girar a roleta">
+  <div class="form-wrap">
+    <form class="card" id="form" novalidate>
+      <button class="close" type="button" data-close aria-label="Fechar">×</button>
+      <div class="card-title"><em>1</em> Preencha seus dados para girar</div>
+      <div class="fields">
+        <div class="field" id="f-name"><label for="name">Nome</label><input id="name" autocomplete="name" placeholder="Seu nome completo" maxlength="60"></div>
+        <div class="field" id="f-phone"><label for="phone">WhatsApp</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" maxlength="16"></div>
+      </div>
+      <label class="check"><input type="checkbox" id="optin" checked> Quero receber ofertas exclusivas da Espaço do Celular pelo WhatsApp.</label>
+      <div class="msg" id="msg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFEA00" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 17h.01"/></svg><span></span></div>
+      <button class="btn-spin" id="spin" type="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#080808" stroke-width="2.6" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+        <span>GIRAR ROLETA</span><i class="ring"></i>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Tela de ganhador -->
+<div class="overlay" id="winModal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="win-wrap" id="winWrap">
+  <canvas class="win-mascot" id="winMascot" aria-hidden="true"></canvas>
+  <div class="win">
+    <div class="win-rays"></div>
+    <button class="close" data-close aria-label="Fechar">×</button>
+    <div class="trophy"><svg viewBox="0 0 24 24" fill="none" stroke="#080808" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg></div>
+    <h2 id="winTitle">PARABÉNS, VOCÊ GANHOU!</h2>
+    <p class="sub" id="winSub">Olá! Seu prêmio já está reservado.</p>
+    <div class="prize-box"><small>Seu prêmio</small><strong id="winPrize">—</strong></div>
+    <div class="code"><div><span>Código do prêmio</span><b id="winCode">—</b></div><button class="btn-sm" id="copyCode" type="button">Copiar</button></div>
+    <div class="confirm-wa">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#FFD400" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.4A8.4 8.4 0 1 1 21 11.5z"/><path d="M9 10h.01M12 10h.01M15 10h.01"/></svg>
+      <span>Informe o código no <b>WhatsApp</b> para confirmar seu prêmio</span>
+    </div>
+    <p class="wa-num" id="waNum"></p>
+    <p class="fine" id="winFine">Válido por 7 dias. Apresente o código em uma loja Espaço do Celular.</p>
+  </div>
+  </div>
+</div>
+
+<!-- PIN -->
+<div class="overlay" id="pinModal" role="dialog" aria-modal="true">
+  <form class="dialog" id="pinForm">
+    <button class="close" type="button" data-close aria-label="Fechar">×</button>
+    <h3>ÁREA DO LOJISTA</h3>
+    <p>Digite a senha de acesso ao painel administrativo.</p>
+    <input class="pin" id="pin" type="password" maxlength="20" placeholder="••••••••" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    <div class="msg" id="pinMsg" style="justify-content:center;margin:12px 0 0"><span>Senha incorreta. Tente novamente.</span></div>
+    <button class="btn-main" type="submit">ENTRAR NO PAINEL</button>
+  </form>
+</div>
+
+<!-- ADMIN -->
+<div class="admin" id="admin">
+  <div class="hazard"></div>
+  <div class="a-top"><div class="a-top-in">
+    <div class="a-title">
+      <span class="logo"><img class="logo-img sm" src="logo-edc.jpg" alt="Espaço do Celular"></span>
+      <span class="a-badge">Painel</span>
+    </div>
+    <div class="row-btns"><button class="btn-o" id="viewSite">Ver roleta</button><button class="btn-y" id="logout">Sair</button></div>
+  </div></div>
+  <div class="a-wrap">
+    <h2>PAINEL ADMINISTRATIVO</h2>
+    <p class="hint">Gerencie os prêmios da roleta, acompanhe os participantes e ajuste a campanha.</p>
+    <div class="stats">
+      <div class="stat"><span>Participantes</span><b id="stTotal">0</b></div>
+      <div class="stat"><span>Giros hoje</span><b id="stToday">0</b></div>
+      <div class="stat"><span>Prêmios ativos</span><b id="stActive">0</b></div>
+      <div class="stat"><span>Mais sorteado</span><b class="sm" id="stTop">—</b></div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-tab="prizes">Prêmios</button>
+      <button class="tab" data-tab="people">Participantes</button>
+      <button class="tab" data-tab="config">Configurações</button>
+    </div>
+
+    <div class="panel on" id="tab-prizes">
+      <div class="p-head">
+        <div><h4>Prêmios da roleta</h4><p>O peso define a chance de cada prêmio sair. As cores alternam automaticamente.</p></div>
+        <div class="row-btns"><button class="btn-o" id="addPrize">+ Adicionar prêmio</button><button class="btn-y" id="savePrizes">Salvar alterações</button></div>
+      </div>
+      <div class="table-scroll"><table>
+        <thead><tr><th style="width:50px">Cor</th><th>Prêmio</th><th style="width:110px">Peso</th><th style="width:140px">Chance</th><th style="width:80px">Ativo</th><th style="width:56px"></th></tr></thead>
+        <tbody id="prizeRows"></tbody>
+      </table></div>
+      <div class="warn" id="prizeWarn"></div>
+    </div>
+
+    <div class="panel" id="tab-people">
+      <div class="p-head">
+        <div><h4>Participantes</h4><p>Registros feitos neste navegador.</p></div>
+        <div class="row-btns"><button class="btn-o" id="copyCsv">Copiar CSV</button><button class="btn-o" id="clearPeople">Limpar lista</button></div>
+      </div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Prêmio</th><th>Nome</th><th>WhatsApp</th><th>Código</th><th>Data</th></tr></thead>
+        <tbody id="peopleRows"></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel" id="tab-config">
+      <div class="p-head"><div><h4>Configurações da campanha</h4><p>As alterações são salvas automaticamente.</p></div></div>
+      <div class="cfg">
+        <div class="cfg-item"><label>WhatsApp da loja</label><p>Número mostrado ao cliente na tela do prêmio, para ele enviar o código. Use DDD + número.</p><input class="in" id="cfgWa" placeholder="11999999999" inputmode="numeric"></div>
+        <div class="cfg-item"><label>Validade do prêmio</label><p>Quantos dias o cliente tem para retirar o prêmio na loja.</p><input class="in num" id="cfgDays" type="number" min="1" max="90"></div>
+        <div class="cfg-item"><div class="inline"><div><label>Um giro por aparelho</label><p style="margin:0">Impede que o mesmo cliente gire várias vezes.</p></div><label class="sw"><input type="checkbox" id="cfgLimit"><span></span></label></div>
+          <button class="btn-o" id="unlock" style="margin-top:14px">Liberar novo giro neste aparelho</button></div>
+        <div class="cfg-item"><label>Senha do painel</label><p>Senha de acesso a esta área. Use de 4 a 20 caracteres: letras, números ou hífen.</p><div class="inline"><input class="in" id="cfgPin" maxlength="20" placeholder="Nova senha" autocapitalize="characters" spellcheck="false" autocomplete="off"><button class="btn-y" id="savePin">Salvar</button></div></div>
+        <div class="cfg-item" style="grid-column:1/-1"><label>Mascote animado</label><p>Envie o arquivo <b>mascote.mp4</b> preparado para a roleta. Ele aparece em loop atrás da roleta, da cintura para cima, para todos os clientes.</p><div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="mascotFile" style="cursor:pointer">Enviar vídeo</label><input type="file" id="mascotFile" accept="video/mp4,video/webm" hidden><button class="btn-o" id="mascotDel">Remover mascote</button><span class="mascot-st" id="mascotSt"></span></div></div>
+        <div class="cfg-item" style="grid-column:1/-1"><label>Música de fundo</label><p>Toca em loop enquanto a roleta está aberta. Envie o arquivo <b>musica-padrao.mp3</b>.</p><div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="musFundoFile" style="cursor:pointer">Enviar música</label><input type="file" id="musFundoFile" accept="audio/*" hidden><button class="btn-o" id="musFundoDel">Remover</button><span class="mascot-st" id="musFundoSt"></span></div></div>
+        <div class="cfg-item" style="grid-column:1/-1"><label>Música de comemoração</label><p>Toca quando sai o prêmio. Envie o arquivo <b>musica-comemoracao.mp3</b>.</p><div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="musPremioFile" style="cursor:pointer">Enviar música</label><input type="file" id="musPremioFile" accept="audio/*" hidden><button class="btn-o" id="musPremioDel">Remover</button><span class="mascot-st" id="musPremioSt"></span></div></div>
+        <div class="cfg-item" style="grid-column:1/-1"><div class="inline"><div><label>Restaurar padrão</label><p style="margin:0">Volta prêmios e configurações para o padrão. Participantes são mantidos.</p></div><button class="btn-o" id="resetAll">Restaurar</button></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="app-bar" id="appBar"><button class="app-btn" id="sndBtn" type="button" hidden></button></div>
+<canvas id="confetti"></canvas>
+<div class="toast" id="toast"></div>
+
+<script src="db.js"></script>
+<script src="app.js"></script>
+<script src="music.js"></script>
+<script src="pwa.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

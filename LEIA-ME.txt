@@ -1,5 +1,5 @@
 ROLETA PREMIADA — ESPAÇO DO CELULAR
-Link no ar: https://roleta-premiada.vercel.app
+Link no ar: https://roleta-premiada-three.vercel.app
 
 O QUE TEM NESTA PASTA
 - index.html ............ página da roleta (layout, pop-up de cadastro, painel do lojista)

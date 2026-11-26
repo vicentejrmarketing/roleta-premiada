@@ -1,9 +1,20 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/:loja([a-z0-9][a-z0-9-]{1,39})", "destination": "/index.html" }
+    {
+      "source": "/:loja([a-z0-9-]+)",
+      "destination": "/"
+    }
   ],
   "headers": [
-    { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    }
   ]
 }

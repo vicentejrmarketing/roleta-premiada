@@ -73,6 +73,24 @@ create table rede.assets (
   updated_at timestamptz not null default now()
 );
 
+-- administradores do painel do marketing (e-mail + senha) e sessões de login
+create table rede.admins (
+  id serial primary key,
+  email text not null unique,
+  nome text not null default '',
+  senha_hash text not null,
+  ativo boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create table rede.sessoes (
+  token_hash text primary key,
+  admin_id int not null references rede.admins(id) on delete cascade,
+  expira timestamptz not null
+);
+
+alter table rede.admins enable row level security;
+alter table rede.sessoes enable row level security;
 alter table rede.config enable row level security;
 alter table rede.campanhas enable row level security;
 alter table rede.lojas enable row level security;
@@ -131,6 +149,10 @@ begin
     papel := 'bloqueado'; return;
   end if;
   select x.id, x.pin_hash into loja_id, l_hash from rede.lojas x where x.slug = lower(trim(coalesce(p_slug, '')));
+  if left(coalesce(p_pin, ''), 2) = 'S-' and exists (select 1 from rede.sessoes s join rede.admins a on a.id = s.admin_id
+       where s.token_hash = encode(extensions.digest(p_pin, 'sha256'), 'hex') and s.expira > now() and a.ativo) then
+    papel := 'master'; return;
+  end if;
   if v <> '' and exists (select 1 from rede.config c where c.id = 1 and c.master_pin_hash = extensions.crypt(v, c.master_pin_hash)) then
     papel := 'master'; return;
   end if;
@@ -365,6 +387,44 @@ begin
 end $$;
 
 /* ---------------- painel do marketing (/admin, senha mestra) ---------------- */
+
+create or replace function public.rede_m_login_email(p_email text, p_senha text)
+ returns jsonb language plpgsql security definer set search_path to ''
+as $$
+declare e text := lower(trim(coalesce(p_email, ''))); k text := 'email:' || e; a record; tk text;
+begin
+  if (select count(*) from rede.login_fails f where f.chave = k and f.at > now() - interval '15 minutes') >= 10
+     or (select count(*) from rede.login_fails f where f.at > now() - interval '15 minutes') >= 120 then
+    return jsonb_build_object('error', 'bloqueado');
+  end if;
+  select * into a from rede.admins where email = e and ativo;
+  if not found or a.senha_hash <> extensions.crypt(coalesce(p_senha, ''), a.senha_hash) then
+    insert into rede.login_fails (chave) values (k);
+    return jsonb_build_object('error', 'senha');
+  end if;
+  tk := 'S-' || encode(extensions.gen_random_bytes(24), 'hex');
+  delete from rede.sessoes where expira < now();
+  insert into rede.sessoes (token_hash, admin_id, expira) values (encode(extensions.digest(tk, 'sha256'), 'hex'), a.id, now() + interval '12 hours');
+  return jsonb_build_object('ok', true, 'token', tk, 'nome', a.nome, 'email', a.email);
+end $$;
+
+create or replace function public.rede_m_logout(p_pin text)
+ returns jsonb language sql security definer set search_path to ''
+as $$ delete from rede.sessoes where token_hash = encode(extensions.digest(coalesce(p_pin, ''), 'sha256'), 'hex'); select jsonb_build_object('ok', true) $$;
+
+create or replace function public.rede_m_set_senha(p_pin text, p_atual text, p_nova text)
+ returns jsonb language plpgsql security definer set search_path to ''
+as $$
+declare a record;
+begin
+  select ad.* into a from rede.sessoes s join rede.admins ad on ad.id = s.admin_id
+    where s.token_hash = encode(extensions.digest(coalesce(p_pin, ''), 'sha256'), 'hex') and s.expira > now();
+  if not found then return jsonb_build_object('error', 'pin'); end if;
+  if a.senha_hash <> extensions.crypt(coalesce(p_atual, ''), a.senha_hash) then return jsonb_build_object('error', 'senha'); end if;
+  if length(coalesce(p_nova, '')) < 8 then return jsonb_build_object('error', 'curta'); end if;
+  update rede.admins set senha_hash = extensions.crypt(p_nova, extensions.gen_salt('bf')) where id = a.id;
+  return jsonb_build_object('ok', true);
+end $$;
 
 create or replace function public.rede_m_login(p_pin text)
  returns jsonb language plpgsql security definer set search_path to ''

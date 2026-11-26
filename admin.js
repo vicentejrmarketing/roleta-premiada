@@ -9,7 +9,7 @@ async function rpc(fn, body) {
   return r.json();
 }
 const ERR = {
-  pin: 'Senha incorreta. Entre de novo.', bloqueado: 'Muitas tentativas erradas. Aguarde 15 minutos.',
+  pin: 'Sua sessão expirou. Entre de novo.', senha: 'E-mail ou senha incorretos.', curta: 'A nova senha precisa ter pelo menos 8 caracteres.', bloqueado: 'Muitas tentativas erradas. Aguarde 15 minutos.',
   premios: 'Cada lista precisa ter de 2 a 16 prêmios.', formato: 'Senha inválida: use de 4 a 20 caracteres (letras, números ou hífen). A senha mestra precisa de 6.',
   slug: 'Endereço inválido: use letras minúsculas, números e hífen (ex.: colombo-centro).', slug_usado: 'Já existe uma loja com esse endereço.',
   nome: 'Preencha o nome.', campanha: 'Esta loja ainda não tem campanha. Escolha uma campanha para ela primeiro.',
@@ -33,20 +33,32 @@ const LIM = { rede: '1 por WhatsApp na rede', loja: '1 por WhatsApp por loja', l
 const isEsg = p => p.estoque !== null && p.estoque !== undefined && (+p.saidos || 0) >= +p.estoque;
 
 /* ---------- login ---------- */
+function enter(tok, who) {
+  PIN = tok; try { sessionStorage.setItem('edc_adm', JSON.stringify({ t: tok, who })); } catch (e) {}
+  $('#meInfo').textContent = 'Logado como ' + who + '. Mínimo 8 caracteres.';
+  $('#loginView').hidden = true; $('#panel').hidden = false; load();
+}
+function exit(msg) {
+  PIN = null; try { sessionStorage.removeItem('edc_adm'); } catch (e) {}
+  $('#panel').hidden = true; $('#loginView').hidden = false;
+  if (msg) { $('#loginMsg span').textContent = msg; $('#loginMsg').classList.add('show'); }
+}
 $('#loginForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const pin = $('#mPin').value.trim().toUpperCase(); const b = $('#loginForm .btn-main'); b.disabled = true;
-  let r = null; try { r = await rpc('rede_m_login', { p_pin: pin }); } catch (err) {}
+  const b = $('#loginForm .btn-main'); b.disabled = true;
+  let r = null; try { r = await rpc('rede_m_login_email', { p_email: $('#mEmail').value.trim(), p_senha: $('#mSenha').value }); } catch (err) {}
   b.disabled = false;
-  if (r && r.ok) { PIN = pin; $('#loginView').hidden = true; $('#panel').hidden = false; load(); }
-  else { $('#loginMsg span').textContent = r ? (ERR[r.error] || 'Senha incorreta.') : 'Sem conexão. Tente novamente.'; $('#loginMsg').classList.add('show'); $('#mPin').select(); }
+  if (r && r.ok) { $('#mSenha').value = ''; enter(r.token, r.email); }
+  else { $('#loginMsg span').textContent = r ? (ERR[r.error] || 'E-mail ou senha incorretos.') : 'Sem conexão. Tente novamente.'; $('#loginMsg').classList.add('show'); $('#mSenha').select(); }
 });
-$('#mPin').addEventListener('input', () => $('#loginMsg').classList.remove('show'));
-$('#logout').addEventListener('click', () => { PIN = null; location.reload(); });
+['#mEmail', '#mSenha'].forEach(s => $(s).addEventListener('input', () => $('#loginMsg').classList.remove('show')));
+$('#logout').addEventListener('click', () => { const t = PIN; exit(); rpc('rede_m_logout', { p_pin: t }).catch(() => {}); });
+try { const s = JSON.parse(sessionStorage.getItem('edc_adm') || 'null'); if (s && s.t) enter(s.t, s.who); } catch (e) {}
 $('#reload').addEventListener('click', () => load(true));
 
 async function load(msg) {
   let r = null; try { r = await rpc('rede_m_overview', { p_pin: PIN }); } catch (e) { return offline(); }
+  if (r && r.error === 'pin') return exit(ERR.pin);
   if (!r || r.error) return fail(r);
   D = r; render(); if (msg) toast('Dados atualizados.');
 }
@@ -261,11 +273,18 @@ $('#copyCsv').addEventListener('click', () => {
 });
 
 /* ---------- configurações ---------- */
+$('#savePass').addEventListener('click', async () => {
+  const nv = $('#newPass').value;
+  if (nv.length < 8) return toast(ERR.curta);
+  let r = null; try { r = await rpc('rede_m_set_senha', { p_pin: PIN, p_atual: $('#curPass').value, p_nova: nv }); } catch (e) { return offline(); }
+  if (r && r.ok) { $('#curPass').value = ''; $('#newPass').value = ''; toast('Sua senha foi trocada.'); }
+  else toast(r && r.error === 'senha' ? 'A senha atual está errada.' : (ERR[r && r.error] || 'Não foi possível trocar.'));
+});
 $('#saveMaster').addEventListener('click', async () => {
   const v = $('#newMaster').value.trim().toUpperCase();
   if (!/^[A-Z0-9-]{6,20}$/.test(v)) return toast(ERR.formato);
   let r = null; try { r = await rpc('rede_m_set_master_pin', { p_pin: PIN, p_new: v }); } catch (e) { return offline(); }
-  if (r && r.ok) { PIN = v; $('#newMaster').value = ''; toast('Senha mestra trocada.'); } else fail(r);
+  if (r && r.ok) { $('#newMaster').value = ''; toast('Senha mestra das lojas trocada.'); } else fail(r);
 });
 const toB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(f); });
 async function upload(name, f, maxMB) {

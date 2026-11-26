@@ -55,8 +55,9 @@ td a:hover{text-decoration:underline}
   <form class="dialog" id="loginForm">
     <img class="logo-img" src="/logo-edc.jpg" alt="Espaço do Celular" style="margin:0 auto 14px;width:72px;height:72px">
     <h3>PAINEL DO MARKETING</h3>
-    <p>Gerencie as roletas de todas as lojas. Digite a senha mestra.</p>
-    <input class="in pin" id="mPin" type="password" maxlength="20" placeholder="••••••••" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    <p>Gerencie as roletas de todas as lojas.</p>
+    <input class="in" id="mEmail" type="email" placeholder="E-mail" autocomplete="username" style="height:52px;font-size:15px">
+    <input class="in" id="mSenha" type="password" placeholder="Senha" autocomplete="current-password" style="height:52px;font-size:15px;margin-top:10px">
     <div class="msg" id="loginMsg" style="margin:12px 0 0"><span>Senha incorreta.</span></div>
     <button class="btn-main" type="submit">ENTRAR</button>
   </form>
@@ -127,7 +128,10 @@ td a:hover{text-decoration:underline}
     <div class="panel" id="tab-config">
       <div class="p-head"><div><h4>Configurações gerais</h4><p>Valem para todas as lojas.</p></div></div>
       <div class="cfg">
-        <div class="cfg-item"><label>Senha mestra</label><p>Entra neste painel e no painel de qualquer loja. Use de 6 a 20 caracteres: letras, números ou hífen.</p>
+        <div class="cfg-item"><label>Minha senha</label><p id="meInfo">Senha do seu login neste painel (mínimo 8 caracteres).</p>
+          <input class="in" id="curPass" type="password" placeholder="Senha atual" autocomplete="current-password" style="margin-bottom:10px">
+          <div class="inline"><input class="in" id="newPass" type="password" placeholder="Nova senha" autocomplete="new-password"><button class="btn-y" id="savePass">Salvar</button></div></div>
+        <div class="cfg-item"><label>Senha mestra das lojas</label><p>Senha do marketing para entrar na "Área do lojista" de qualquer loja. Use de 6 a 20 caracteres: letras, números ou hífen.</p>
           <div class="inline"><input class="in" id="newMaster" maxlength="20" placeholder="Nova senha mestra" autocapitalize="characters" spellcheck="false" autocomplete="off"><button class="btn-y" id="saveMaster">Salvar</button></div></div>
         <div class="cfg-item"><label>Mascote animado</label><p>Arquivo <b>mascote.mp4</b> preparado (fundo removido). Aparece em todas as lojas.</p>
           <div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="fMascote" style="cursor:pointer;margin:0">Enviar vídeo</label><input type="file" id="fMascote" accept="video/mp4,video/webm" hidden><button class="btn-o" data-del="mascote">Remover</button></div></div>

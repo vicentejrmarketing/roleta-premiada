@@ -1,6 +1,6 @@
 (() => {
 'use strict';
-const KEY = 'edc_roleta_v3';
+const KEY = 'edc_roleta_v4_' + (window.EDC_LOJA || '_');
 const DEFAULTS = {
   prizes: [
     { label: '10% OFF em acessórios', weight: 20, active: true },
@@ -30,8 +30,8 @@ async function rpc(fn, body) {
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
 }
-let adminPin = null;
-const ERR = { pin: 'Senha incorreta.', bloqueado: 'Muitas tentativas erradas. Aguarde 15 minutos.', premios: 'Mantenha de 2 a 16 prêmios.', formato: 'A senha deve ter de 4 a 20 caracteres: letras, números ou hífen.', arquivo: 'Formato de vídeo não aceito.', tamanho: 'Arquivo grande demais.' };
+let adminPin = null, adminRole = null, canEdit = false;
+const ERR = { permissao: 'Sem permissão para isso. Fale com o marketing.', loja: 'Loja não encontrada.', pin: 'Senha incorreta.', bloqueado: 'Muitas tentativas erradas. Aguarde 15 minutos.', premios: 'Mantenha de 2 a 16 prêmios.', formato: 'A senha deve ter de 4 a 20 caracteres: letras, números ou hífen.', arquivo: 'Formato de vídeo não aceito.', tamanho: 'Arquivo grande demais.' };
 function applyRemote(cfg) {
   if (!cfg || !Array.isArray(cfg.prizes)) return false;
   const before = JSON.stringify([S.prizes, S.whatsapp, S.validity, S.limit]);
@@ -59,7 +59,7 @@ async function pushConfig(okMsg) {
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const active = () => S.prizes.filter(p => p.active && p.label.trim());
+const active = () => S.prizes.filter(p => p.active && !p.esgotado && p.label.trim());
 
 /* ---------- toast ---------- */
 let tT;
@@ -466,7 +466,7 @@ $('#pinForm').addEventListener('submit', async e => {
   b.disabled = true;
   let r = null; try { r = await rpc('roleta_admin_login', { p_pin: pin }); } catch (err) {}
   b.disabled = false;
-  if (r && r.ok) { adminPin = pin; close($('#pinModal')); openAdmin(); }
+  if (r && r.ok) { adminPin = pin; adminRole = r.papel || 'loja'; canEdit = !!r.edita_premios; close($('#pinModal')); openAdmin(); }
   else { $('#pinMsg span').textContent = r ? (ERR[r.error] || 'Senha incorreta.') : 'Sem conexão. Tente novamente.'; $('#pinMsg').classList.add('show'); $('#pin').select(); }
 });
 async function loadPeople() {
@@ -477,12 +477,14 @@ async function loadPeople() {
 }
 async function openAdmin() {
   parts = []; adminEl.classList.add('show'); document.body.style.overflow = 'hidden';
-  $('#tab-people .p-head p').textContent = 'Todos os giros, de todos os aparelhos.';
+  adminEl.classList.toggle('is-loja', adminRole !== 'master'); adminEl.classList.toggle('no-edit', !canEdit);
+  $('#tab-prizes .p-head p').textContent = canEdit ? 'O peso define a chance de cada prêmio sair. Deixe o estoque vazio para não ter limite.' : 'Os prêmios desta loja são definidos pelo marketing.';
+  $('#tab-people .p-head p').textContent = 'Todos os giros feitos na roleta desta loja.';
   $('#tab-config .p-head p').textContent = 'As alterações valem na hora para todos os clientes.';
   renderAdmin();
   await syncConfig(true); renderAdmin(); loadPeople();
 }
-function closeAdmin() { adminEl.classList.remove('show'); document.body.style.overflow = ''; adminPin = null; }
+function closeAdmin() { adminEl.classList.remove('show'); document.body.style.overflow = ''; adminPin = null; adminRole = null; canEdit = false; }
 $('#logout').addEventListener('click', closeAdmin);
 $('#viewSite').addEventListener('click', closeAdmin);
 $$('.tab').forEach(t => t.addEventListener('click', () => {
@@ -512,14 +514,19 @@ function renderPrizes() {
   let ai = 0;
   $('#prizeRows').innerHTML = draft.map((p, i) => {
     const pct = p.active && total ? (Math.max(0, +p.weight || 0) / total * 100) : 0;
+    const dis = canEdit ? '' : ' disabled';
+    const est = p.estoque === null || p.estoque === undefined || p.estoque === '' ? '' : +p.estoque;
+    const sd = +p.saidos || 0;
+    const left = est === '' ? '' : Math.max(0, est - sd);
     const color = p.active ? (ai++ % 2 === 0 ? 'y' : 'k') : '';
     return `<tr>
       <td>${p.active ? `<div class="swatch ${color}"></div>` : '<div class="swatch" style="opacity:.25"></div>'}</td>
-      <td><input class="in" data-i="${i}" data-k="label" value="${esc(p.label)}" maxlength="34"></td>
-      <td><input class="in num" type="number" min="0" max="1000" data-i="${i}" data-k="weight" value="${+p.weight || 0}"></td>
+      <td><input class="in" data-i="${i}" data-k="label" value="${esc(p.label)}" maxlength="34"${dis}></td>
+      <td><input class="in num" type="number" min="0" max="1000" data-i="${i}" data-k="weight" value="${+p.weight || 0}"${dis}></td>
+      <td><input class="in num" type="number" min="0" data-i="${i}" data-k="estoque" value="${est}" placeholder="∞"${dis}><div class="est-info">${sd} saíram${left === '' ? '' : ' · ' + (left ? 'restam ' + left : '<b>esgotado</b>')}</div></td>
       <td><span class="pct">${pct.toFixed(1).replace('.', ',')}%</span><div class="bar"><i style="width:${Math.min(100, pct)}%"></i></div></td>
-      <td><label class="sw"><input type="checkbox" data-i="${i}" data-k="active" ${p.active ? 'checked' : ''}><span></span></label></td>
-      <td><button class="icon-btn" data-del="${i}" title="Remover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></td>
+      <td><label class="sw"><input type="checkbox" data-i="${i}" data-k="active" ${p.active ? 'checked' : ''}${dis}><span></span></label></td>
+      <td><button class="icon-btn prize-edit" data-del="${i}" title="Remover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></td>
     </tr>`;
   }).join('');
   const w = [];
@@ -533,6 +540,7 @@ $('#prizeRows').addEventListener('input', e => {
   const el = e.target; if (!el.dataset.k) return; const p = draft[+el.dataset.i];
   if (el.dataset.k === 'active') { p.active = el.checked; renderPrizes(); }
   else if (el.dataset.k === 'weight') { p.weight = Math.max(0, +el.value || 0); refreshPct(); }
+  else if (el.dataset.k === 'estoque') { p.estoque = el.value === '' ? null : Math.max(0, parseInt(el.value) || 0); }
   else p.label = el.value;
 });
 function refreshPct() {
@@ -556,11 +564,11 @@ $('#savePrizes').addEventListener('click', async () => {
   const act = draft.filter(p => p.active && p.label.trim());
   if (act.length < 2) return toast('Mantenha pelo menos 2 prêmios ativos.');
   const prev = S.prizes, b = $('#savePrizes');
-  S.prizes = draft.map(p => ({ label: p.label.trim() || 'Prêmio', weight: Math.max(0, +p.weight || 0), active: !!p.active }));
+  S.prizes = draft.map(p => ({ label: p.label.trim() || 'Prêmio', weight: Math.max(0, +p.weight || 0), active: !!p.active, estoque: p.estoque === '' || p.estoque === undefined ? null : p.estoque, saidos: +p.saidos || 0 }));
   b.disabled = true; b.textContent = 'Salvando...';
   const ok = await pushConfig('Prêmios salvos! A roleta foi atualizada para todos os clientes.');
   b.disabled = false; b.textContent = 'Salvar alterações';
-  if (ok) { save(); highlight = -1; drawWheel(); strip(); renderStats(); }
+  if (ok) { await syncConfig(true); save(); highlight = -1; drawWheel(); strip(); renderAdmin(); }
   else S.prizes = prev;
 });
 
@@ -571,7 +579,7 @@ function renderPeople() {
 $('#copyCsv').addEventListener('click', () => {
   if (!S.people.length) return toast('Nenhum participante para exportar.');
   const q = v => `"${String(v).replace(/"/g, '""')}"`;
-  const csv = ['Prêmio;Nome;WhatsApp;Código;Data;Aceita ofertas', ...S.people.map(p => [p.prize, p.name, p.phone, p.code, new Date(p.date).toLocaleString('pt-BR'), p.optin ? 'Sim' : 'Não'].map(q).join(';'))].join('\n');
+  const csv = ['Prêmio;Nome;WhatsApp;Código;Data;Aceita ofertas;Campanha', ...S.people.map(p => [p.prize, p.name, p.phone, p.code, new Date(p.date).toLocaleString('pt-BR'), p.optin ? 'Sim' : 'Não', p.campanha || ''].map(q).join(';'))].join('\n');
   copy(csv, 'CSV copiado! Cole em uma planilha.');
 });
 let clearArm = 0;

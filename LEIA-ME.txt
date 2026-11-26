@@ -1,24 +1,22 @@
-ROLETA PREMIADA — ESPAÇO DO CELULAR
-Link no ar: https://roleta-premiada-three.vercel.app
+ROLETA PREMIADA — ESPAÇO DO CELULAR (MULTI-LOJA)
+Site: https://roleta-premiada-three.vercel.app
 
-O QUE TEM NESTA PASTA
-- index.html ............ página da roleta (layout, pop-up de cadastro, painel do lojista)
-- style.css ............. visual principal
-- app.js ................ roleta, sorteio, tela de prêmio e painel do lojista
-- popup.js .............. abre o cadastro ao tocar no centro da roleta
-- db.js ................. faz a roleta usar a base própria (roleta2), separada da roleta original
-- music.js .............. música de fundo e de comemoração
-- pwa.js, sw.js, manifest.webmanifest ... modo app (tela cheia, instalar no tablet, funcionar offline)
-- logo-edc.jpg .......... logo / ícone do app
+ENDEREÇOS
+- /nome-da-loja ...... roleta do totem daquela loja (ex.: /colombo). O totem abre sempre este endereço.
+- /admin ............. painel do marketing (senha mestra): lojas, campanhas, prêmios, leads de toda a rede.
+- "Área do lojista" .. no rodapé da roleta de cada loja: o gerente entra com a senha da loja e vê só os leads dela.
 
-ONDE FICAM OS DADOS
-Prêmios, participantes, senha do painel, mascote e músicas ficam no Supabase
-(projeto ziuxfcxkpovnplrxofxz, funções roleta2_*). Nada disso fica nos arquivos,
-então publicar esta pasta em outro lugar mantém todos os dados.
-Senha do painel (Área do lojista): a mesma da roleta original (não fica salva no repositório).
-Estrutura do banco: supabase/migrations/.
+COMO FUNCIONA
+- Campanha: nome, período, regra de giro (1 por WhatsApp na rede, 1 por loja ou sem limite), validade e prêmios padrão.
+- Loja: entra numa campanha e recebe os prêmios padrão; depois cada loja pode ter prêmios e estoque próprios.
+- Estoque: quando um prêmio esgota numa loja, ele sai da roleta daquela loja sozinho.
+- Mascote e músicas: os mesmos em todas as lojas (enviados no /admin).
 
-COMO PUBLICAR DE NOVO
-É um site estático, sem instalação nem build. Basta publicar a pasta "roleta-premiada"
-como está (Vercel, Netlify, Cloudflare Pages ou qualquer hospedagem de site).
-No Vercel: novo projeto, Framework "Other", sem comando de build, pasta raiz = esta pasta.
+ARQUIVOS
+- index.html, style.css, app.js, popup.js, music.js, pwa.js, sw.js, manifest.webmanifest, logo-edc.jpg ... roleta
+- db.js ......... descobre a loja pelo endereço e manda as chamadas para as funções rede_* do Supabase
+- admin.html, admin.js ... painel do marketing
+- supabase/migrations/ ... estrutura do banco (schema "rede")
+
+DADOS
+Supabase, projeto ziuxfcxkpovnplrxofxz. As senhas não ficam nos arquivos.

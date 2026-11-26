@@ -32,6 +32,10 @@
 .win-wrap.has-m .win{padding-top:40px}
 .pz{display:inline-block;background:var(--y);color:var(--k);font-weight:900;font-size:13px;line-height:1.25;padding:6px 10px;border-radius:8px}
 .nm-empty{color:var(--faint);font-style:italic}
+.admin.is-loja .only-master,.admin.no-edit .prize-edit{display:none!important}
+.admin.no-edit #prizeRows input{opacity:.75}
+.est-info{font-size:11px;color:var(--faint);margin-top:4px;white-space:nowrap}.est-info b{color:#ff7a7a}
+.cfg-item[hidden]{display:none}
 .pin{letter-spacing:.25em;padding-left:.25em;font-size:24px}
 .app-bar{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:40;display:flex;gap:8px}
 .app-btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,212,0,.45);background:rgba(8,8,8,.82);color:#FFD400;font:800 12px Montserrat,sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .15s,background .2s}
@@ -236,10 +240,10 @@ h1 .outline{-webkit-text-stroke:3px var(--y)}
     <div class="panel on" id="tab-prizes">
       <div class="p-head">
         <div><h4>Prêmios da roleta</h4><p>O peso define a chance de cada prêmio sair. As cores alternam automaticamente.</p></div>
-        <div class="row-btns"><button class="btn-o" id="addPrize">+ Adicionar prêmio</button><button class="btn-y" id="savePrizes">Salvar alterações</button></div>
+        <div class="row-btns"><button class="btn-o prize-edit" id="addPrize">+ Adicionar prêmio</button><button class="btn-y prize-edit" id="savePrizes">Salvar alterações</button></div>
       </div>
       <div class="table-scroll"><table>
-        <thead><tr><th style="width:50px">Cor</th><th>Prêmio</th><th style="width:110px">Peso</th><th style="width:140px">Chance</th><th style="width:80px">Ativo</th><th style="width:56px"></th></tr></thead>
+        <thead><tr><th style="width:50px">Cor</th><th>Prêmio</th><th style="width:110px">Peso</th><th style="width:140px">Estoque</th><th style="width:140px">Chance</th><th style="width:80px">Ativo</th><th style="width:56px"></th></tr></thead>
         <tbody id="prizeRows"></tbody>
       </table></div>
       <div class="warn" id="prizeWarn"></div>
@@ -248,7 +252,7 @@ h1 .outline{-webkit-text-stroke:3px var(--y)}
     <div class="panel" id="tab-people">
       <div class="p-head">
         <div><h4>Participantes</h4><p>Registros feitos neste navegador.</p></div>
-        <div class="row-btns"><button class="btn-o" id="copyCsv">Copiar CSV</button><button class="btn-o" id="clearPeople">Limpar lista</button></div>
+        <div class="row-btns"><button class="btn-o" id="copyCsv">Copiar CSV</button><button class="btn-o only-master" id="clearPeople">Limpar lista</button></div>
       </div>
       <div class="table-scroll"><table>
         <thead><tr><th>Prêmio</th><th>Nome</th><th>WhatsApp</th><th>Código</th><th>Data</th></tr></thead>
@@ -260,14 +264,14 @@ h1 .outline{-webkit-text-stroke:3px var(--y)}
       <div class="p-head"><div><h4>Configurações da campanha</h4><p>As alterações são salvas automaticamente.</p></div></div>
       <div class="cfg">
         <div class="cfg-item"><label>WhatsApp da loja</label><p>Número mostrado ao cliente na tela do prêmio, para ele enviar o código. Use DDD + número.</p><input class="in" id="cfgWa" placeholder="11999999999" inputmode="numeric"></div>
-        <div class="cfg-item"><label>Validade do prêmio</label><p>Quantos dias o cliente tem para retirar o prêmio na loja.</p><input class="in num" id="cfgDays" type="number" min="1" max="90"></div>
-        <div class="cfg-item"><div class="inline"><div><label>Um giro por aparelho</label><p style="margin:0">Impede que o mesmo cliente gire várias vezes.</p></div><label class="sw"><input type="checkbox" id="cfgLimit"><span></span></label></div>
+        <div class="cfg-item" hidden><label>Validade do prêmio</label><p>Quantos dias o cliente tem para retirar o prêmio na loja.</p><input class="in num" id="cfgDays" type="number" min="1" max="90"></div>
+        <div class="cfg-item"><div class="inline"><div><label>Um giro por aparelho</label><p style="margin:0">Além da regra do WhatsApp, bloqueia novos giros neste totem até liberar.</p></div><label class="sw"><input type="checkbox" id="cfgLimit"><span></span></label></div>
           <button class="btn-o" id="unlock" style="margin-top:14px">Liberar novo giro neste aparelho</button></div>
-        <div class="cfg-item"><label>Senha do painel</label><p>Senha de acesso a esta área. Use de 4 a 20 caracteres: letras, números ou hífen.</p><div class="inline"><input class="in" id="cfgPin" maxlength="20" placeholder="Nova senha" autocapitalize="characters" spellcheck="false" autocomplete="off"><button class="btn-y" id="savePin">Salvar</button></div></div>
-        <div class="cfg-item" style="grid-column:1/-1"><label>Mascote animado</label><p>Envie o arquivo <b>mascote.mp4</b> preparado para a roleta. Ele aparece em loop atrás da roleta, da cintura para cima, para todos os clientes.</p><div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="mascotFile" style="cursor:pointer">Enviar vídeo</label><input type="file" id="mascotFile" accept="video/mp4,video/webm" hidden><button class="btn-o" id="mascotDel">Remover mascote</button><span class="mascot-st" id="mascotSt"></span></div></div>
-        <div class="cfg-item" style="grid-column:1/-1"><label>Música de fundo</label><p>Toca em loop enquanto a roleta está aberta. Envie o arquivo <b>musica-padrao.mp3</b>.</p><div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="musFundoFile" style="cursor:pointer">Enviar música</label><input type="file" id="musFundoFile" accept="audio/*" hidden><button class="btn-o" id="musFundoDel">Remover</button><span class="mascot-st" id="musFundoSt"></span></div></div>
-        <div class="cfg-item" style="grid-column:1/-1"><label>Música de comemoração</label><p>Toca quando sai o prêmio. Envie o arquivo <b>musica-comemoracao.mp3</b>.</p><div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="musPremioFile" style="cursor:pointer">Enviar música</label><input type="file" id="musPremioFile" accept="audio/*" hidden><button class="btn-o" id="musPremioDel">Remover</button><span class="mascot-st" id="musPremioSt"></span></div></div>
-        <div class="cfg-item" style="grid-column:1/-1"><div class="inline"><div><label>Restaurar padrão</label><p style="margin:0">Volta prêmios e configurações para o padrão. Participantes são mantidos.</p></div><button class="btn-o" id="resetAll">Restaurar</button></div></div>
+        <div class="cfg-item"><label>Senha do painel</label><p>Senha do gerente desta loja. Use de 4 a 20 caracteres: letras, números ou hífen.</p><div class="inline"><input class="in" id="cfgPin" maxlength="20" placeholder="Nova senha" autocapitalize="characters" spellcheck="false" autocomplete="off"><button class="btn-y" id="savePin">Salvar</button></div></div>
+        <div class="cfg-item only-master" style="grid-column:1/-1"><label>Mascote animado</label><p>Envie o arquivo <b>mascote.mp4</b> preparado para a roleta. Ele aparece em loop atrás da roleta, da cintura para cima, para todos os clientes.</p><div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="mascotFile" style="cursor:pointer">Enviar vídeo</label><input type="file" id="mascotFile" accept="video/mp4,video/webm" hidden><button class="btn-o" id="mascotDel">Remover mascote</button><span class="mascot-st" id="mascotSt"></span></div></div>
+        <div class="cfg-item only-master" style="grid-column:1/-1"><label>Música de fundo</label><p>Toca em loop enquanto a roleta está aberta. Envie o arquivo <b>musica-padrao.mp3</b>.</p><div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="musFundoFile" style="cursor:pointer">Enviar música</label><input type="file" id="musFundoFile" accept="audio/*" hidden><button class="btn-o" id="musFundoDel">Remover</button><span class="mascot-st" id="musFundoSt"></span></div></div>
+        <div class="cfg-item only-master" style="grid-column:1/-1"><label>Música de comemoração</label><p>Toca quando sai o prêmio. Envie o arquivo <b>musica-comemoracao.mp3</b>.</p><div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="musPremioFile" style="cursor:pointer">Enviar música</label><input type="file" id="musPremioFile" accept="audio/*" hidden><button class="btn-o" id="musPremioDel">Remover</button><span class="mascot-st" id="musPremioSt"></span></div></div>
+        <div class="cfg-item" hidden style="grid-column:1/-1"><div class="inline"><div><label>Restaurar padrão</label><p style="margin:0">Volta prêmios e configurações para o padrão. Participantes são mantidos.</p></div><button class="btn-o" id="resetAll">Restaurar</button></div></div>
       </div>
     </div>
   </div>

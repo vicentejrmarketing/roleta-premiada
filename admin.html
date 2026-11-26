@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Painel do marketing — Roleta Premiada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" type="image/jpeg" href="/logo-edc.jpg">
+<style>
+body{min-height:100vh}
+.admin{display:block;position:relative;inset:auto;min-height:100vh}
+.admin[hidden]{display:none}
+.logo-img{width:52px;height:52px;border-radius:50%;display:block;box-shadow:0 0 0 2px rgba(255,212,0,.25),0 0 26px rgba(255,212,0,.28)}
+.overlay{overflow-y:auto;z-index:60}
+.dialog.wide{width:min(900px,100%);text-align:left;margin:auto}
+.dialog.wide h3{margin-bottom:4px}
+.dialog .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.dialog .grid .full{grid-column:1/-1}
+.fld label{display:block;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--y);margin-bottom:6px}
+.fld small{display:block;font-size:11.5px;color:var(--faint);margin-top:5px;line-height:1.45}
+select.in{appearance:auto}
+.in:disabled{opacity:.6}
+.foot{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;flex-wrap:wrap}
+.chk{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted);font-weight:600}
+td,th{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line2);vertical-align:middle}
+th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:800}
+td a{color:var(--y);font-weight:700;text-decoration:none}
+td a:hover{text-decoration:underline}
+.mut{color:var(--faint);font-size:12px}
+.pill-s{display:inline-block;font-size:11px;font-weight:800;padding:4px 8px;border-radius:6px;background:rgba(255,212,0,.12);color:var(--y);white-space:nowrap}
+.pill-s.off{background:rgba(255,255,255,.06);color:var(--faint)}
+.pill-s.red{background:rgba(255,90,90,.14);color:#ff8a8a}
+.lojas-chk{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:12px;max-height:340px;overflow:auto}
+.lojas-chk label{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer}
+.lojas-chk input{accent-color:#FFD400;width:18px;height:18px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px}
+.filters .fld{min-width:160px}
+.est-info{font-size:11px;color:var(--faint);margin-top:4px;white-space:nowrap}.est-info b{color:#ff7a7a}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;z-index:2}
+.login .dialog{width:min(420px,100%)}
+.login .pin{letter-spacing:.25em;padding-left:.25em;font-size:22px;text-align:center}
+.msg{justify-content:center}
+@media (max-width:700px){.dialog .grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="bg"><div class="slash s1"></div><div class="slash s2"></div><div class="dots"></div><div class="dots d2"></div></div>
+
+<!-- LOGIN -->
+<div class="login" id="loginView">
+  <form class="dialog" id="loginForm">
+    <img class="logo-img" src="/logo-edc.jpg" alt="Espaço do Celular" style="margin:0 auto 14px;width:72px;height:72px">
+    <h3>PAINEL DO MARKETING</h3>
+    <p>Gerencie as roletas de todas as lojas. Digite a senha mestra.</p>
+    <input class="in pin" id="mPin" type="password" maxlength="20" placeholder="••••••••" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    <div class="msg" id="loginMsg" style="margin:12px 0 0"><span>Senha incorreta.</span></div>
+    <button class="btn-main" type="submit">ENTRAR</button>
+  </form>
+</div>
+
+<!-- PAINEL -->
+<div class="admin" id="panel" hidden>
+  <div class="hazard"></div>
+  <div class="a-top"><div class="a-top-in">
+    <div class="a-title"><img class="logo-img" src="/logo-edc.jpg" alt="Espaço do Celular"><span class="a-badge">Marketing</span></div>
+    <div class="row-btns"><button class="btn-o" id="reload">Atualizar</button><button class="btn-y" id="logout">Sair</button></div>
+  </div></div>
+  <div class="a-wrap">
+    <h2>ROLETAS DA REDE</h2>
+    <p class="hint">Cada loja tem sua roleta, seus prêmios, sua senha e seus leads.</p>
+    <div class="stats">
+      <div class="stat"><span>Lojas ativas</span><b id="stLojas">0</b></div>
+      <div class="stat"><span>Giros hoje</span><b id="stHoje">0</b></div>
+      <div class="stat"><span>Giros nas campanhas</span><b id="stCamp">0</b></div>
+      <div class="stat"><span>Prêmios esgotados</span><b id="stEsg">0</b></div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab on" data-tab="lojas">Lojas</button>
+      <button class="tab" data-tab="campanhas">Campanhas</button>
+      <button class="tab" data-tab="leads">Leads</button>
+      <button class="tab" data-tab="config">Configurações</button>
+    </div>
+
+    <div class="panel on" id="tab-lojas">
+      <div class="p-head">
+        <div><h4>Lojas</h4><p>O endereço de cada loja é o que vai no totem.</p></div>
+        <div class="row-btns"><button class="btn-y" id="newLoja">+ Nova loja</button></div>
+      </div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Loja</th><th>Endereço do totem</th><th>Campanha</th><th>Hoje</th><th>Na campanha</th><th>Último giro</th><th>Estoque</th><th></th></tr></thead>
+        <tbody id="lojaRows"></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel" id="tab-campanhas">
+      <div class="p-head">
+        <div><h4>Campanhas</h4><p>Crie a campanha com os prêmios padrão e coloque nas lojas. Depois, ajuste os prêmios de cada loja em "Lojas".</p></div>
+        <div class="row-btns"><button class="btn-y" id="newCamp">+ Nova campanha</button></div>
+      </div>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Campanha</th><th>Período</th><th>Regra de giro</th><th>Validade</th><th>Lojas</th><th>Giros</th><th></th></tr></thead>
+        <tbody id="campRows"></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel" id="tab-leads">
+      <div class="p-head"><div><h4>Leads</h4><p>Todos os clientes que giraram, de todas as lojas.</p></div>
+        <div class="row-btns"><button class="btn-o" id="copyCsv">Copiar CSV</button><button class="btn-y" id="dlCsv">Baixar planilha</button></div></div>
+      <div class="filters">
+        <div class="fld"><label>Loja</label><select class="in" id="fLoja"></select></div>
+        <div class="fld"><label>Campanha</label><select class="in" id="fCamp"></select></div>
+        <div class="fld"><label>De</label><input class="in" type="date" id="fDe"></div>
+        <div class="fld"><label>Até</label><input class="in" type="date" id="fAte"></div>
+        <button class="btn-o" id="fGo">Buscar</button>
+      </div>
+      <p class="mut" id="leadCount" style="margin-bottom:8px"></p>
+      <div class="table-scroll"><table>
+        <thead><tr><th>Data</th><th>Loja</th><th>Nome</th><th>WhatsApp</th><th>Prêmio</th><th>Código</th><th>Ofertas</th></tr></thead>
+        <tbody id="leadRows"></tbody>
+      </table></div>
+    </div>
+
+    <div class="panel" id="tab-config">
+      <div class="p-head"><div><h4>Configurações gerais</h4><p>Valem para todas as lojas.</p></div></div>
+      <div class="cfg">
+        <div class="cfg-item"><label>Senha mestra</label><p>Entra neste painel e no painel de qualquer loja. Use de 6 a 20 caracteres: letras, números ou hífen.</p>
+          <div class="inline"><input class="in" id="newMaster" maxlength="20" placeholder="Nova senha mestra" autocapitalize="characters" spellcheck="false" autocomplete="off"><button class="btn-y" id="saveMaster">Salvar</button></div></div>
+        <div class="cfg-item"><label>Mascote animado</label><p>Arquivo <b>mascote.mp4</b> preparado (fundo removido). Aparece em todas as lojas.</p>
+          <div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="fMascote" style="cursor:pointer;margin:0">Enviar vídeo</label><input type="file" id="fMascote" accept="video/mp4,video/webm" hidden><button class="btn-o" data-del="mascote">Remover</button></div></div>
+        <div class="cfg-item"><label>Música de fundo</label><p>Toca em loop nas roletas de todas as lojas (MP3, até 5 MB).</p>
+          <div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="fFundo" style="cursor:pointer;margin:0">Enviar música</label><input type="file" id="fFundo" accept="audio/*" hidden><button class="btn-o" data-del="musica_fundo">Remover</button></div></div>
+        <div class="cfg-item"><label>Música de comemoração</label><p>Toca quando sai o prêmio (MP3, até 5 MB).</p>
+          <div class="inline" style="justify-content:flex-start;flex-wrap:wrap"><label class="btn-y" for="fPremio" style="cursor:pointer;margin:0">Enviar música</label><input type="file" id="fPremio" accept="audio/*" hidden><button class="btn-o" data-del="musica_premio">Remover</button></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOJA -->
+<div class="overlay" id="dlgLoja"><form class="dialog wide" id="formLoja">
+  <button class="close" type="button" data-close aria-label="Fechar">×</button>
+  <h3 id="lojaTitle">NOVA LOJA</h3>
+  <div class="grid">
+    <div class="fld"><label>Nome da loja</label><input class="in" id="lNome" maxlength="60" placeholder="Ex.: Colombo"></div>
+    <div class="fld"><label>Endereço do totem</label><input class="in" id="lSlug" maxlength="40" placeholder="colombo"><small id="lUrl"></small></div>
+    <div class="fld"><label>WhatsApp da loja</label><input class="in" id="lWa" inputmode="numeric" placeholder="41999999999"><small>Aparece para o cliente na tela do prêmio.</small></div>
+    <div class="fld"><label>Campanha</label><select class="in" id="lCamp"></select><small>Ao entrar numa campanha, a loja recebe os prêmios padrão dela.</small></div>
+    <div class="fld"><label>Senha do gerente</label><input class="in" id="lPin" maxlength="20" autocapitalize="characters" spellcheck="false" autocomplete="off"><small id="lPinHint">De 4 a 20 caracteres: letras, números ou hífen.</small></div>
+    <div class="fld"><label>Permissões</label>
+      <div class="chk" style="margin-top:6px"><label class="sw"><input type="checkbox" id="lEdita"><span></span></label>Gerente pode editar os prêmios</div>
+      <div class="chk" style="margin-top:10px"><label class="sw"><input type="checkbox" id="lAtivo" checked><span></span></label>Roleta ativa</div></div>
+  </div>
+  <div class="foot"><button class="btn-o" type="button" data-close>Cancelar</button><button class="btn-y" type="submit">Salvar loja</button></div>
+</form></div>
+
+<!-- PRÊMIOS (loja ou campanha) -->
+<div class="overlay" id="dlgPrem"><div class="dialog wide">
+  <button class="close" type="button" data-close aria-label="Fechar">×</button>
+  <h3 id="premTitle">PRÊMIOS</h3>
+  <p id="premSub" style="text-align:left;margin:4px 0 0"></p>
+  <div class="table-scroll" style="margin-top:14px"><table>
+    <thead><tr><th>Prêmio</th><th style="width:100px">Peso</th><th style="width:130px">Estoque</th><th style="width:90px">Chance</th><th style="width:70px">Ativo</th><th style="width:50px"></th></tr></thead>
+    <tbody id="premRows"></tbody>
+  </table></div>
+  <div class="warn" id="premWarn"></div>
+  <div class="foot"><button class="btn-o" type="button" id="premAdd">+ Adicionar prêmio</button><span style="flex:1"></span><button class="btn-o" type="button" data-close>Cancelar</button><button class="btn-y" type="button" id="premSave">Salvar prêmios</button></div>
+</div></div>
+
+<!-- CAMPANHA -->
+<div class="overlay" id="dlgCamp"><form class="dialog wide" id="formCamp">
+  <button class="close" type="button" data-close aria-label="Fechar">×</button>
+  <h3 id="campTitle">NOVA CAMPANHA</h3>
+  <div class="grid">
+    <div class="fld full"><label>Nome da campanha</label><input class="in" id="cNome" maxlength="60" placeholder="Ex.: Black Friday 2026"></div>
+    <div class="fld"><label>Começa em</label><input class="in" type="date" id="cIni"><small>Vazio = começa já.</small></div>
+    <div class="fld"><label>Termina em</label><input class="in" type="date" id="cFim"><small>Vazio = sem data para acabar. Depois do fim, a roleta mostra "Promoção encerrada".</small></div>
+    <div class="fld"><label>Regra de giro</label><select class="in" id="cLim">
+      <option value="rede">1 giro por WhatsApp em toda a rede</option>
+      <option value="loja">1 giro por WhatsApp em cada loja</option>
+      <option value="livre">Sem limite</option></select></div>
+    <div class="fld"><label>Validade do prêmio (dias)</label><input class="in" type="number" id="cVal" min="1" max="90" value="7"></div>
+  </div>
+  <p style="text-align:left;margin:18px 0 0;font-size:12px;color:var(--faint)">Os prêmios padrão da campanha são editados no botão <b>Prêmios padrão</b> da lista de campanhas.</p>
+  <div class="foot"><button class="btn-o" type="button" data-close>Cancelar</button><button class="btn-y" type="submit">Salvar campanha</button></div>
+</form></div>
+
+<!-- APLICAR CAMPANHA -->
+<div class="overlay" id="dlgApl"><div class="dialog wide">
+  <button class="close" type="button" data-close aria-label="Fechar">×</button>
+  <h3 id="aplTitle">COLOCAR NAS LOJAS</h3>
+  <p style="text-align:left;margin:4px 0 0">Escolha as lojas que vão rodar esta campanha. Cada loja roda uma campanha por vez.</p>
+  <div class="chk" style="margin-top:14px"><label class="sw"><input type="checkbox" id="aplAll"><span></span></label>Marcar todas</div>
+  <div class="lojas-chk" id="aplList"></div>
+  <div class="chk" style="margin-top:16px"><label class="sw"><input type="checkbox" id="aplSub"><span></span></label>Substituir os prêmios dessas lojas pelos prêmios padrão da campanha</div>
+  <div class="foot"><button class="btn-o" type="button" data-close>Cancelar</button><button class="btn-y" type="button" id="aplSave">Aplicar</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+<script src="/admin.js"></script>
+</body>
+</html>

@@ -303,6 +303,7 @@ async function upload(name, f, maxMB) {
   if (r && r.ok) toast('Enviado! Aparece em todas as lojas em até 30 segundos.'); else fail(r);
 }
 $('#fMascote').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; upload('mascote', f, 4.2); });
+$('#fPropaganda').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; upload('propaganda', f, 5); });
 $('#fFundo').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; upload('musica_fundo', f, 5); });
 $('#fPremio').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; upload('musica_premio', f, 5); });
 $$('[data-del]').forEach(b => b.addEventListener('click', async () => {

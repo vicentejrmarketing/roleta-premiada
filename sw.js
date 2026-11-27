@@ -1,5 +1,5 @@
-const CACHE='edc-roleta-v4';
-const SHELL=['/','/style.css','/db.js','/app.js','/popup.js','/pwa.js','/music.js','/logo-edc.jpg','/manifest.webmanifest'];
+const CACHE='edc-roleta-v5';
+const SHELL=['/','/style.css','/db.js','/app.js','/popup.js','/propaganda.js','/pwa.js','/music.js','/logo-edc.jpg','/manifest.webmanifest'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n.startsWith('edc-roleta-')&&n!==CACHE).map(n=>caches.delete(n)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{
